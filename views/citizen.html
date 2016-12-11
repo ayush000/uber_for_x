@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <title>Citizen
+    <%= userId %>
+  </title>
+  <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.28.0/mapbox-gl.js'></script>
+  <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.28.0/mapbox-gl.css' rel='stylesheet' />
+  <script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v2.0.1/mapbox-gl-geocoder.js'></script>
+  <link rel='stylesheet' href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v2.0.1/mapbox-gl-geocoder.css'
+    type='text/css' />
+  <style>
+        #map { position:absolute; top:200px; bottom:0; width:100%; }
+        .marker {
+            display: block;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            padding: 0;
+        }
+  </style>
+</head>
+
+<body data-userId="<%= userId %>">
+  <h1>Hello Citizen
+    <%= userId %>
+  </h1>
+  <button onclick="requestForHelp()"> Request for help
+</button>
+<h4 id="notification">
+  <!-- Some info will be displayed here-->
+</h4>
+
+<div id='map'>
+  <!-- We will load a map here later-->
+</div>
+
+<!--Load JavaScripts -->
+
+<!-- Load socket.io client library -->
+<script src="/socket.io/socket.io.js"></script>
+<!-- Load JQuery from a CDN -->
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+
+<!-- load libraries before your JS code
+Write rest of your JS code here -->
+
+<script type="text/javascript">
+  var socket = io();
+  //Fetch userId from the data-atribute of the body tag
+  var userId = document.body.getAttribute("data-userId");
+
+  /*Fire a 'join' event and send your userId to the server, to join a room - room-name will be the userId itself!
+*/
+  socket.emit('join', { userId: userId });
+
+  //Declare variables, this will be used later
+  var requestDetails = {};
+  var copDetails = {};
+  var map, marker;
+
+  //Citizen's info
+  requestDetails = {
+    citizenId: userId,
+    location: {
+      address: "Indiranagar, Bengaluru, Karnataka 560038, India",
+      latitude: 12.9718915,
+      longitude: 77.64115449999997
+    }
+  }
+
+  //When button is clicked, fire request-for-help and send citizen's userId and location
+  function requestForHelp() {
+    socket.emit("request-for-help", requestDetails);
+  }
+
+  //Listen for a "request-accepted" event
+  socket.on("request-accepted", function (eventData) {
+    copDetails = eventData; //Save cop details
+
+    //Display Cop details
+    document.getElementById("notification").innerHTML = "A cop is coming to your rescue! \n" + JSON.stringify(copDetails);
+  });
+
+  mapboxgl.accessToken = "pk.eyJ1IjoiYXl1c2gwMDAiLCJhIjoiY2l3aTZpZTh2MDFmaTJ6cG94ZzZ4dnE3eSJ9.9zdaXHeiwS5WiXD_aAb_ig";
+  map = new mapboxgl.Map({
+    container: 'map', // container id
+    style: 'mapbox://styles/mapbox/streets-v10', //stylesheet location
+    center: [77.64115449999997, 12.9718915], // starting position
+    zoom: 9 // starting zoom
+  });
+  // Create marker
+  var el = document.createElement("img");
+  el.className = 'marker';
+  el.setAttribute('src','https://raw.githubusercontent.com/booleanhunter/code-samples/master/blog-posts/how-to-build-your-own-uber-for-x-app/public/images/citizen.png');
+  el.style.width = '50px';
+  el.style.height = '50px';
+  marker = new mapboxgl.Marker(el)
+    .setLngLat([77.64115449999997, 12.9718915])
+    .addTo(map);
+  map.addControl(new MapboxGeocoder({
+    accessToken: mapboxgl.accessToken
+  }).on('result', function (data) {
+    console.log(data);
+    //Extract address and coordinates from the results and save it
+    requestDetails.location = {
+      address: data.result['place_name'],
+      latitude: data.result.center[1],
+      longitude: data.result.center[0],
+    };
+    marker.setLngLat([data.result.center[0], data.result.center[1]]);
+
+  }));
+
+  //Load the map and give it a default style
+  // map = L.mapbox.map("map", "mapbox.streets");
+  //set it to a given lat-lng and zoom level
+  // map.setView([12.9718915, 77.64115449999997], 9);
+  //Display a default marker
+  // marker = L.marker([12.9718915, 77.64115449999997]).addTo(map);
+
+</script>
+</body>
+
+</html>

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <title>Visualize Data</title>
+  <link href="https://api.tiles.mapbox.com/mapbox-gl-js/v0.28.0/mapbox-gl.css" rel="stylesheet" />
+</head>
+
+<body>
+
+  <div id="map" style="position:absolute; top:0; bottom: 0; width: 100%;">
+<!--Load the map here -->
+</div>
+
+<!-- Load socket.io client library -->
+<script src="/socket.io/socket.io.js"></script>
+
+<!-- Load JQuery from a CDN -->
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+
+<!-- Load Mapbox GL Library -->
+<script src="https://api.tiles.mapbox.com/mapbox-gl-js/v0.28.0/mapbox-gl.js"></script>
+
+<!-- load libraries before your JS code
+    Write rest of your JS code here -->
+
+<script type="text/javascript">
+  var socket = io();
+  var map, sdata;
+  mapboxgl.accessToken = "pk.eyJ1IjoiYXl1c2gwMDAiLCJhIjoiY2l3aTZpZTh2MDFmaTJ6cG94ZzZ4dnE3eSJ9.9zdaXHeiwS5WiXD_aAb_ig";
+
+  $.ajax({
+    url: "/requests/info",
+    type: "GET",
+    dataType: "json",
+    success: function (data) {
+      sdata = data;
+      console.log(data);
+    },
+    error: function (httpRequest, status, error) {
+      console.log(error);
+    }
+  });
+  map = new mapboxgl.Map({
+    container: "map",
+    style: "mapbox://styles/mapbox/dark-v9",
+    center: [77.64115449999997, 12.9718915],
+    zoom: 10
+  });
+
+  map.on("load", function () {
+
+    //Add a new source from our GeoJSON data
+    map.addSource("help-requests", {
+      type: "geojson",
+      data: sdata
+    });
+
+    //we can specify different color and styling formats by adding different layers
+
+    map.addLayer({
+      "id": "help-requests",
+      "type": "circle",
+      "source": "help-requests",
+      "paint": {
+        //Apply a different color to different status fields
+        "circle-color": {
+          property: "status",
+          type: "categorical",
+          stops: [
+            //For waiting, show in red
+            ["waiting", "rgba(255,0,0,0.5)"],
+
+            //For engaged, show in green
+            ["engaged", "rgba(0,255,0,0.5)"]
+          ]
+        },
+        "circle-radius": 20, //Radius of the circle
+        "circle-blur": 1 //Amount of blur
+      }
+    });
+  });
+
+</script>
+</body>
+
+</html>

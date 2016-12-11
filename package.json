@@ -1,0 +1,28 @@
+{
+  "name": "myapp",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "async": "*",
+    "bcrypt": "*",
+    "body-parser": "*",
+    "connect-redis": "*",
+    "consolidate": "*",
+    "cookie-parser": "*",
+    "debug": "*",
+    "express": "*",
+    "express-session": "*",
+    "googlemaps": "*",
+    "jsx-loader": "*",
+    "lodash": "*",
+    "mongodb": "^2.2.14",
+    "nodemailer": "^2.7.0",
+    "react": "*",
+    "redis": "*",
+    "serve-favicon": "*",
+    "socket.io": "*"
+  },
+  "devDependencies": {
+    "eslint": "^3.11.1"
+  }
+}

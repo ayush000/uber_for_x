@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <title>Cop
+    <%= userId %>
+  </title>
+  <link href="https://api.mapbox.com/mapbox.js/v2.4.0/mapbox.css" rel="stylesheet" />
+</head>
+
+<body data-userId="<%= userId %>">
+  <h1>Hello Cop
+    <%= userId %>
+  </h1>
+  <h2>Cop details: </h2>
+  <div id="copDetails"></div>
+  <h4 id="notification">
+    <!-- Some info will be displayed here-->
+  </h4>
+  <button onclick="helpCitizen()"> Help Citizen
+</button>
+
+<div id="map">
+  <!-- We will load a map here later-->
+</div>
+
+<!--Load JavaScripts -->
+<!-- Load socket.io client library -->
+<script src="/socket.io/socket.io.js"></script>
+<script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.28.0/mapbox-gl.js'></script>
+<!-- Load JQuery from a CDN -->
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+
+<!-- load libraries before your JS code
+Write rest of your JS code here -->
+
+<script type="text/javascript">
+  var socket = io();
+
+  //Fetch userId from the data-atribute of the body tag
+  var userId = document.body.getAttribute("data-userId");
+
+  /*Fire a 'join' event and send your userId to the server, to join a room
+   - room-name will be the userId itself!*/
+  socket.emit('join', { userId: userId });
+
+  //Declare variables, this will be used later
+  var requestDetails = {};
+  var copDetails = {};
+  var map, marker;
+  //First send a GET request using JQuery AJAX and get the cop's details and save it
+  $.ajax({
+    url: "/cops/info?userId=" + userId,
+    type: "GET",
+    dataType: "json",
+    success: function (data) { //Once response is successful
+      copDetails = data.copDetails; //Save the cop details
+      copDetails.location = {
+        longitude: copDetails.location.coordinates[0],
+        latitude: copDetails.location.coordinates[1],
+        address: copDetails.location.address,
+      };
+      document.getElementById("copDetails").innerHTML = JSON.stringify(data.copDetails);
+    },
+    error: function (httpRequest, status, error) {
+      console.log(error);
+    }
+  });
+
+  //Listen for a "request-for-help" event
+  socket.on("request-for-help", function (eventData) {
+    //Once request is received, do this:
+
+    //Save request details
+    requestDetails = eventData; //Contains info of citizen
+
+    //display the data received from the event
+    document.getElementById("notification").innerHTML = "Someone's being attacked by a wildling! \n" + JSON.stringify(requestDetails);
+  });
+  function helpCitizen() {
+    //Fire a "request-accepted" event/signal and send relevant info back to server
+    socket.emit("request-accepted", {
+      requestDetails: requestDetails,
+      copDetails: copDetails
+    });
+  }
+
+</script>
+</body>
+
+</html>

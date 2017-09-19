@@ -16,13 +16,13 @@
     "jsx-loader": "*",
     "lodash": "*",
     "mongodb": "^2.2.14",
-    "nodemailer": "^2.7.0",
+    "nodemailer": "^4.1.0",
     "react": "*",
     "redis": "*",
     "serve-favicon": "*",
     "socket.io": "*"
   },
   "devDependencies": {
-    "eslint": "^3.11.1"
+    "eslint": "^4.7.1"
   }
 }
